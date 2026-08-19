@@ -1,0 +1,1 @@
+Java is a secure, cross-platform, object-oriented programming language created by Sun Microsystems (now part of Oracle). Its pillars are the Java Virtual Machine (JVM), object-oriented programming, and the principle of "write once, run anywhere."

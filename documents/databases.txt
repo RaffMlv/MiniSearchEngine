@@ -1,0 +1,1 @@
+A database is an organized system for storing, managing, and retrieving digital information. The main types are relational (such as tables with rows and columns) and non-relational (such as documents and key-value pairs).
