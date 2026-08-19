@@ -1,100 +1,58 @@
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.List;
 
 public class Main {
-
-    private static String normalize(String text){
-        text = text.toLowerCase();
-        text = text.replaceAll("[^a-zA-Z0-9]", "");
-
-        return text;
-    }
-
-    private static HashMap<String, HashSet<String>> buildIndex(Path docuemntsPath) throws IOException{
-        Path documentsPath = Path.of("documents");
-
-        HashMap<String, HashSet<String>> index = new HashMap<>();
-
-        for(Path path : Files.list(documentsPath).toList()){
-
-            String content = Files.readString(path);
-
-            String[] words = content.split("\\s+");
-
-            String documentName = path.getFileName().toString();
-
-            for (String word : words) {
-                word = normalize(word);
-
-                if (word.isEmpty()) {
-                    continue;
-                }
-
-                if (!index.containsKey(word)) {
-                    HashSet<String> set = new HashSet<>();
-                    set.add(documentName);
-                    index.put(word, set);
-                } else {
-                    index.get(word).add(documentName);
-                }
-            }
-        }
-
-        return index;
-    }
-
-    private static HashSet<String> search(HashMap<String, HashSet<String>> index, String query){
-        String[] queryComponents = query.split("\\s+");
-        for (int i = 0; i < queryComponents.length; i++) {
-            queryComponents[i] = normalize(queryComponents[i]);
-        }
-        HashSet<String> firstDocuments = index.get(queryComponents[0]);
-
-        if (firstDocuments == null){
-            return null;
-        }
-
-        HashSet<String> results = new HashSet<>(firstDocuments);
-
-        for (int i = 1; i < queryComponents.length; i++){
-            HashSet<String> documents = index.get(queryComponents[i]);
-
-            if (documents == null) {
-                return null;
-            }
-            results.retainAll(documents);
-        }
-        return results;
-    }
 
     public static void main(String[] args) throws IOException {
 
         Path documentsPath = Path.of("documents");
 
-        HashMap<String, HashSet<String>> index = buildIndex(documentsPath);
+        SearchEngine searchEngine = new SearchEngine();
 
-        System.out.println("Mini Search Engine \n ------------------\n");
-
-        System.out.print("Search: ");
+        searchEngine.buildIndex(documentsPath);
 
         Scanner scanner = new Scanner(System.in);
 
-        String query = scanner.nextLine();
+        System.out.println("Mini Search Engine");
+        System.out.println("------------------");
 
-        HashSet<String> results = search(index, query);
+        while (true) {
 
-        if (results == null) {
-            System.out.println("No documents found.");
-        } else {
-            System.out.println("Results:");
-            for (String document : results) {
-                System.out.println("- " + document);
+            System.out.print("Search: ");
+
+            String query = scanner.nextLine();
+
+            if (query.equalsIgnoreCase("exit")) {
+                break;
+            }
+
+            Map<String, Double> results = searchEngine.search(query);
+
+            if (results.isEmpty()) {
+                System.out.println("No documents found.");
+            } else {
+                System.out.println("Found in:");
+
+                List<Map.Entry<String, Double>> sortedResults = new ArrayList<>(results.entrySet());
+
+                sortedResults.sort(
+                        (a, b) -> Double.compare(
+                                b.getValue(),
+                                a.getValue()
+                        )
+                );
+
+                for (Map.Entry<String, Double> result : sortedResults) {
+                    System.out.println("- " + result.getKey() +
+                            " (score: " + result.getValue() + ")");
+                }
             }
         }
+
         scanner.close();
     }
 }
