@@ -2,35 +2,45 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 public class SearchEngine {
 
     private HashMap<String, HashMap<String, Integer>> index;
+    private HashMap<String, Integer> documentLengths;
 
     public SearchEngine(){
+
         index = new HashMap<>();
+        documentLengths = new HashMap<>();
     }
     public void buildIndex(Path documentsPath) throws IOException {
-        for (Path path : Files.list(documentsPath).toList()) {
 
-            String content = Files.readString(path);
-            String[] words = TextProcessor.processText(content);
+        try (var paths = Files.list(documentsPath)) {
 
-            String documentName = path.getFileName().toString();
+            for (Path path : paths.toList()) {
 
+                String content = Files.readString(path);
+                String[] words = TextProcessor.processText(content);
 
-            for (String word : words) {
+                String documentName = path.getFileName().toString();
 
-                if (word.isEmpty()) {
-                    continue;
+                int totalTerms = 0;
+
+                for (String word : words) {
+
+                    if (word.isEmpty()) {
+                        continue;
+                    }
+
+                    totalTerms++;
+
+                    index
+                            .computeIfAbsent(word, k -> new HashMap<>())
+                            .merge(documentName, 1, Integer::sum);
                 }
 
-
-                index
-                        .computeIfAbsent(word, k -> new HashMap<>())
-                        .merge(documentName, 1, Integer::sum);
+                documentLengths.put(documentName, totalTerms);
             }
         }
     }
@@ -61,7 +71,9 @@ public class SearchEngine {
                 String document = entry.getKey();
                 int termFrequency = entry.getValue();
 
-                double tf = termFrequency;
+                int documentLength = documentLengths.get(document);
+
+                double tf = (double) termFrequency/documentLength;
 
                 double score = tf * idf;
 
@@ -74,13 +86,7 @@ public class SearchEngine {
         return scores;
     }
 
-    public int getTotalDocuments(){
-        HashSet<String> documents = new HashSet<>();
-
-        for (HashMap<String, Integer> documentMap : index.values()){
-            documents.addAll(documentMap.keySet());
-        }
-
-        return documents.size();
+    public int getTotalDocuments() {
+        return documentLengths.size();
     }
 }
