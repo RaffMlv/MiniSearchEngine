@@ -26,6 +26,11 @@ public class Main {
 
             String query = scanner.nextLine();
 
+            if(query.isEmpty()){
+                System.out.println("No documents found.");
+                continue;
+            }
+
             if (query.equalsIgnoreCase("exit")) {
                 break;
             }
@@ -48,7 +53,7 @@ public class Main {
 
                 for (Map.Entry<String, Double> result : sortedResults) {
                     System.out.println("- " + result.getKey() +
-                            " (score: " + result.getValue() + ")");
+                            " (score: " + String.format("%.3f", result.getValue()) + ")");
                 }
             }
         }

@@ -50,7 +50,7 @@ public class TextProcessor {
         for (int i = 0; i < words.length; i++) {
             words[i] = stem(normalize(words[i]));
 
-            if (isStopWord(text)){
+            if (isStopWord(words[i])){
                 words[i] = "";
             }
         }
